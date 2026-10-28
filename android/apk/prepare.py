@@ -246,7 +246,7 @@ tasks.configureEach {
     replace(manifest,
             '        <activity android:name=".ui.ModelSetupActivity" android:exported="false" />',
             '        <activity android:name=".ui.ModelSetupActivity" android:exported="false" />\n'
-            '        <activity android:name=".ui.ChatActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />')
+            '        <activity android:name=".ui.ChatActivity" android:exported="true" android:windowSoftInputMode="adjustResize" />')
     launch_xml = app / 'src/main/res/layout/fragment_launch.xml'
     chat_entry = (
         '                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/line" />\n'
