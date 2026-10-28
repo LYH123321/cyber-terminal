@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "revision": "62f296533679860a6aeca9cfc966a1006569dd4e",
-  "releaseSequence": 33,
+  "revision": "6e1b5d409b89af427f0916bc5f0a784943925703",
+  "releaseSequence": 34,
   "version": "3.1.0",
   "files": [
     {
@@ -36,8 +36,8 @@
     },
     {
       "path": "android/apk/prepare.py",
-      "sha256": "64dd6c39020c605ed7b4da6c113617d9207eb47314c20569e7a62a905d58ebdf",
-      "size": 23162
+      "sha256": "5d928f182c3043c11d683466558528c6cdd255d7ee40a082f91de470d9b0c258",
+      "size": 25554
     },
     {
       "path": "android/apk/README.md",
@@ -58,6 +58,16 @@
       "path": "android/apk/TavernWebProcessTest.java",
       "sha256": "545b3e6f44ebc82101f57e9a0ad0045b6cbd7bf3a33dbf3a994ee432f57f3110",
       "size": 1589
+    },
+    {
+      "path": "android/apk/video.html",
+      "sha256": "4494cfb4004e96abbf666dbb48f820e3fe0665e911283ad9046ea6060a0359ec",
+      "size": 15377
+    },
+    {
+      "path": "android/apk/VideoActivity.java",
+      "sha256": "737f8f7c15d9466f71f341fb6c14523e5ddc93a880b3026503cf4427061d8cad",
+      "size": 11186
     },
     {
       "path": "android/configure-profiles.mjs",
@@ -5161,9 +5171,9 @@
     }
   ],
   "archive": {
-    "commit": "5c05e4c0b61e902426874e05f03a823940c6cad2",
+    "commit": "17ad5ec1a8fbed61eab058d1e4556fc116ca246b",
     "path": "runtime.zip",
-    "sha256": "452964096db6ddd12089b73b9d8ee8e1219f6a3730d27751533fe55d8cf7ce3d",
-    "size": 10569105
+    "sha256": "fd905061d98afc6e95f74deba6bc6f1267164557ba860b9ee0e531fcf2b8556d",
+    "size": 10579307
   }
 }
