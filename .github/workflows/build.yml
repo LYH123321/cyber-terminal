@@ -16,19 +16,9 @@ jobs:
         with: { node-version: '22' }
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: '17' }
-      - name: Setup Android SDK
-        run: |
-          {
-            echo "## SDK probe"
-            echo "ANDROID_HOME=$ANDROID_HOME"
-            ls "$ANDROID_HOME" || true
-            ls "$ANDROID_HOME/cmdline-tools" || true
-            SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
-            echo "SDKM=$SDKM"
-            "$SDKM" --version || true
-          } >> "$GITHUB_STEP_SUMMARY"
-          yes | "$SDKM" --licenses >/dev/null 2>&1 || true
-          "$SDKM" --install "platforms;android-37" "build-tools;37.0.0" "ndk;26.3.11579264" > /tmp/sdk.log 2>&1 || { echo "INSTALL FAILED, full log:" >> "$GITHUB_STEP_SUMMARY"; cat /tmp/sdk.log >> "$GITHUB_STEP_SUMMARY"; exit 1; }; tail -3 /tmp/sdk.log >> "$GITHUB_STEP_SUMMARY"
+      - uses: android-actions/setup-android@v3
+      - name: Install SDK pieces
+        run: sdkmanager --install "platforms;android-37" "build-tools;37.0.0" "ndk;26.3.11579264"
       - name: Build
         run: bash android/apk/build.sh
         env:
