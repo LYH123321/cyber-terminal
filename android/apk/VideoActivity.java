@@ -133,7 +133,7 @@ public class VideoActivity extends Activity {
             break;
           }
         }
-        String[] first = req.split(" ")[0] + " " + (req.split(" ").length>1?req.split(" ")[1]:"");
+        String first = req.split(" ")[0] + " " + (req.split(" ").length>1?req.split(" ")[1]:"");
         String method = first.split(" ")[0];
         String target = first.contains(" ") ? first.substring(first.indexOf(' ')+1) : "/";
         // 收集 Range 头
