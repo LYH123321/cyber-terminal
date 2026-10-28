@@ -45,6 +45,11 @@ public class VideoActivity extends Activity {
       return prefs(VideoActivity.this).getString(key, "");
     }
 
+    @JavascriptInterface
+    public void setPref(String key, String value) {
+      prefs(VideoActivity.this).edit().putString(key, value).apply();
+    }
+
     /** 原生 POST（JSON）：绕开 WebView 对 127.0.0.1:8001 本地模型服务的 CORS 限制。 */
     @JavascriptInterface
     public String httpPost(String url, String jsonBody, String authKey) {
