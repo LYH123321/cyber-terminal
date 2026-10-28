@@ -28,7 +28,7 @@ jobs:
             "$SDKM" --version || true
           } >> "$GITHUB_STEP_SUMMARY"
           yes | "$SDKM" --licenses >/dev/null 2>&1 || true
-          "$SDKM" --install "platforms;android-37" "build-tools;37.0.0" "ndk;26.3.11579264" 2>&1 | tail -5 >> "$GITHUB_STEP_SUMMARY" || { echo "INSTALL FAILED" >> "$GITHUB_STEP_SUMMARY"; exit 1; }
+          "$SDKM" --install "platforms;android-37" "build-tools;37.0.0" "ndk;26.3.11579264" > /tmp/sdk.log 2>&1 || { echo "INSTALL FAILED, full log:" >> "$GITHUB_STEP_SUMMARY"; cat /tmp/sdk.log >> "$GITHUB_STEP_SUMMARY"; exit 1; }; tail -3 /tmp/sdk.log >> "$GITHUB_STEP_SUMMARY"
       - name: Build
         run: bash android/apk/build.sh
         env:
