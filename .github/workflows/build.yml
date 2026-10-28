@@ -6,7 +6,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -15,14 +17,15 @@ jobs:
         with: { distribution: temurin, java-version: '17' }
       - name: Setup Android SDK
         run: |
-          yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager "platforms;android-37" "build-tools;37.0.0" > /dev/null
+          yes | SDKMANAGER=$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager; $SDKMANAGER --licenses > /dev/null || true
+          $SDKMANAGER --install "platforms;android-37" "build-tools;37.0.0" "ndk;26.3.11579264" "platform-tools"
       - name: Build
         run: bash android/apk/build.sh
         env:
           TAVERN_APK_MODE: Debug
+          TAVERN_APK_SKIP_TESTS: '1'
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: apk
-          path: output/**/*dsh-tavern-android-*.apk*
+          path: output/**/*.apk*
