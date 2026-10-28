@@ -136,6 +136,8 @@ function toolDefs(){
     f('ui_input','向当前焦点输入框填入文字',{text:{type:'string',description:'要输入的内容'}}),
     f('ui_key','按系统键：back/home/recents/notifications/quicksettings/lock',{name:{type:'string',enum:['back','home','recents','notifications','quicksettings','lock']}}),
     f('ui_swipe','滑动屏幕',{x1:{type:'integer'},y1:{type:'integer'},x2:{type:'integer'},y2:{type:'integer'},ms:{type:'integer',description:'时长毫秒，默认300'}}),
+    f('ui_long_press','长按屏幕某点（唤出菜单/多选等）',{x:{type:'integer'},y:{type:'integer'},ms:{type:'integer',description:'毫秒，默认600'}}),
+    f('ui_find_text','按文字找控件位置（不点击），返回中心坐标和区域',{text:{type:'string'}}),
     f('screenshot','截屏并保存，返回文件路径',{}),
     f('clipboard','读写剪贴板',{text:{type:'string',description:'传入则写剪贴板；不传则读'}}),
     f('notify','发系统通知',{title:{type:'string'},text:{type:'string'}}),
@@ -169,6 +171,8 @@ async function callTool(name, args){
       case 'ui_input': url = b+'/app/ui/input?'+q({text:args.text}); break;
       case 'ui_key': url = b+'/app/ui/key?'+q({name:args.name}); break;
       case 'ui_swipe': url = b+'/app/ui/swipe?'+q({x1:args.x1,y1:args.y1,x2:args.x2,y2:args.y2,ms:args.ms||300}); break;
+      case 'ui_long_press': url = b+'/app/ui/longpress?'+q({x:args.x,y:args.y,ms:args.ms||600}); break;
+      case 'ui_find_text': url = b+'/app/ui/text?'+q({text:args.text}); break;
       case 'screenshot': url = b+'/app/ui/screenshot'; break;
       case 'clipboard': url = args.text!=null ? b+'/app/clip?'+q({text:args.text}) : b+'/app/clip'; break;
       case 'notify': url = b+'/app/notify?'+q({title:args.title||'通知',text:args.text||''}); break;
