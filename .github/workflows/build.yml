@@ -17,7 +17,12 @@ jobs:
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: '17' }
       - name: Install SDK pieces
-        run: sdkmanager --install "platforms;android-37" "build-tools;37.0.0" "ndk;26.3.11579264"
+        run: |
+          SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          ls -la "$ANDROID_HOME/cmdline-tools/" || true
+          "$SDKM" --version
+          yes | "$SDKM" --licenses >/dev/null || true
+          "$SDKM" --install "platforms;android-37" "build-tools;37.0.0" "ndk;26.3.11579264"
       - name: Build
         run: bash android/apk/build.sh
         env:
