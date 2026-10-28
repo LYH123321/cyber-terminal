@@ -38,9 +38,15 @@ node "$ROOT/android/apk/build-web-compat.mjs" "$WORK/dsha" "$BUILD/app/src/taver
 cd "$BUILD"
 MODE="${TAVERN_APK_MODE:-Debug}"
 # AGP 会在 user.home/.android 建调试密钥；沙箱里 $HOME 只读，换到构建目录。
+# 固定 keystore（仓库内 android/apk/keys/cyber-terminal.jks）：保证每次 CI 产物签名一致，
+# 升级安装不再 INSTALL_FAILED_UPDATE_INCOMPATIBLE。
 USER_HOME="$WORK/.user-home"
 mkdir -p "$USER_HOME/.android"
-[ -f "$HOME/.android/debug.keystore" ] && cp -f "$HOME/.android/debug.keystore" "$USER_HOME/.android/" || true
+if [ -f "$ROOT/android/apk/keys/cyber-terminal.jks" ]; then
+  cp -f "$ROOT/android/apk/keys/cyber-terminal.jks" "$USER_HOME/.android/debug.keystore"
+elif [ -f "$HOME/.android/debug.keystore" ]; then
+  cp -f "$HOME/.android/debug.keystore" "$USER_HOME/.android/"
+fi
 case "$MODE" in
   Debug)
     TASKS=(":app:assembleStandardDebug")
