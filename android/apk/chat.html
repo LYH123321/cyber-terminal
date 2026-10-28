@@ -205,9 +205,14 @@ async function callTool(name, args){
       }
       default: return '未知工具 ' + name;
     }
-    const r = await fetch(url, {headers:H});
-    const t = await r.text();
-    return t.length > 4000 ? t.slice(0,4000) + '…(截断)' : t;
+    let r;
+    if (NATIVE) {
+      r = Android.http(url);  // 原生代发：绕开 WebView 的 mixed-content/CORS 限制
+    } else {
+      const resp = await fetch(url, {headers:H});
+      r = await resp.text();
+    }
+    return r.length > 4000 ? r.slice(0,4000) + '…(截断)' : r;
   }catch(e){
     return '工具调用失败：' + e.message + '（桥未启动？先在主页启动服务器）';
   }
