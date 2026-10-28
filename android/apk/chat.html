@@ -207,7 +207,7 @@ async function callTool(name, args){
     }
     let r;
     if (NATIVE) {
-      r = Android.http(url);  // 原生代发：绕开 WebView 的 mixed-content/CORS 限制
+      r = Android.http(url, null);  // 原生代发：绕开 WebView 的 mixed-content/CORS 限制
     } else {
       const resp = await fetch(url, {headers:H});
       r = await resp.text();
@@ -232,62 +232,33 @@ async function round(depth){
   if (depth > 4){ addMsg('bot','（工具调用次数超限，已停止）'); return; }
   const body = {
     model: CFG.model,
-    messages: [{role:'system',content:CFG.sys}, ...history.slice(-30)],
-    stream: true
+    messages: [{role:'system',content:CFG.sys}, ...history.slice(-30)]
   };
   const tools = toolDefs();
   if (tools.length) body.tools = tools;
-  let r;
-  try{
-    r = await fetch(CFG.url.replace(/\/+$/,'') + '/chat/completions', {
+  let text;
+  if (NATIVE){
+    text = Android.http(CFG.url.replace(/\/+$/,'') + '/chat/completions', JSON.stringify(body), CFG.key); // 原生代发，支持本地模型
+  } else {
+    const r0 = await fetch(CFG.url.replace(/\/+$/,'') + '/chat/completions', {
       method:'POST',
       headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + CFG.key },
       body: JSON.stringify(body)
     });
-  }catch(e){
-    addMsg('bot','❌ 网络错误：' + e.message); history.pop(); return;
+    text = await r0.text();
   }
-  if (!r.ok){
-    const t = await r.text();
-    addMsg('bot','❌ HTTP ' + r.status + '：' + t.slice(0,300)); history.pop(); return;
+  let r;
+  try { r = JSON.parse(text); } catch { addMsg('bot','❌ 解析失败：' + String(text).slice(0,200)); history.pop(); return; }
+  if (r.error){
+    addMsg('bot','❌ API错误：' + (typeof r.error==='string'?r.error:JSON.stringify(r.error).slice(0,200))); history.pop(); return;
   }
-  // 解析 SSE 流
-  const reader = r.body.getReader();
-  const dec = new TextDecoder();
-  let buf = '', full = '', toolCalls = [];
-  let span = null;
-  while(true){
-    const {done, value} = await reader.read();
-    if (done) break;
-    buf += dec.decode(value, {stream:true});
-    const lines = buf.split('\n');
-    buf = lines.pop();
-    for (const line of lines){
-      if (!line.startsWith('data:')) continue;
-      const data = line.slice(5).trim();
-      if (data === '[DONE]') continue;
-      let j; try{ j = JSON.parse(data); }catch{ continue; }
-      const d = j.choices && j.choices[0] && j.choices[0].delta;
-      if (!d) continue;
-      if (d.content){
-        if (!span) span = addMsg('bot','');
-        full += d.content; span.textContent = full; msgs.scrollTop = msgs.scrollHeight;
-      }
-      if (d.tool_calls){
-        for (const tc of d.tool_calls){
-          const i = tc.index || 0;
-          toolCalls[i] = toolCalls[i] || {id:'', name:'', args:''};
-          if (tc.id) toolCalls[i].id = tc.id;
-          if (tc.function && tc.function.name) toolCalls[i].name += tc.function.name;
-          if (tc.function && tc.function.arguments) toolCalls[i].args += tc.function.arguments;
-        }
-      }
-    }
-  }
-  toolCalls = toolCalls.filter(t => t && t.name);
+  if (!r.choices || !r.choices[0]){ addMsg('bot','❌ 空响应：' + String(text).slice(0,200)); history.pop(); return; }
+  // 非流式统一处理（本地模型走非流式；云端也兼容）
+  const m = r.choices[0].message || {};
+  let full = m.content || '';
+  let toolCalls = (m.tool_calls || []).map((t,i) => ({id:t.id||('call_'+i), name:t.function.name, args:t.function.arguments}));
   if (full) history.push({role:'assistant', content:full});
   if (toolCalls.length){
-    // 记录 assistant 的 tool_calls 消息
     history.push({role:'assistant', content: full || null,
       tool_calls: toolCalls.map(t=>({id:t.id, type:'function', function:{name:t.name, arguments:t.args}}))});
     for (const t of toolCalls){
@@ -301,6 +272,7 @@ async function round(depth){
     return;
   }
   if (!full && !toolCalls.length) addMsg('bot','（空回复）');
+  else if (full) addMsg('bot', full);
   setStatus(true);
 }
 // ---------- 设置面板 ----------
