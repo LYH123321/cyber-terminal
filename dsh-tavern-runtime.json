@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "revision": "4f5c2a655cb92502140633a8fe3f1811544ab67a",
-  "releaseSequence": 36,
+  "revision": "406c01e89b38154188661b1a11863334b0d736b8",
+  "releaseSequence": 39,
   "version": "3.1.0",
   "files": [
     {
@@ -21,13 +21,13 @@
     },
     {
       "path": "android/apk/chat.html",
-      "sha256": "b5cd17acc6a612cf193e3e0a2e0745456955eb6741636b0f5311219d202c9cea",
-      "size": 18983
+      "sha256": "6ec506f921abdea1b5d3ea957d5fe0e35ff01a2f88c4acdcb3068038bad27dae",
+      "size": 18346
     },
     {
       "path": "android/apk/ChatActivity.java",
-      "sha256": "8f6d93f927004e33b95b394f38e187589e9c89cf37810e83a7745f1ec59f2ea3",
-      "size": 5188
+      "sha256": "43025f2142261e66495a1b771f3a0cedfa356ccba0e5e6b8a874f32e26f6bb92",
+      "size": 5831
     },
     {
       "path": "android/apk/keys/cyber-terminal.jks",
@@ -61,13 +61,13 @@
     },
     {
       "path": "android/apk/video.html",
-      "sha256": "4494cfb4004e96abbf666dbb48f820e3fe0665e911283ad9046ea6060a0359ec",
-      "size": 15377
+      "sha256": "a249cd46459480ae36e9a6ded3e556fab7584fe0acecfa10b0f24d89309f72ad",
+      "size": 15684
     },
     {
       "path": "android/apk/VideoActivity.java",
-      "sha256": "737f8f7c15d9466f71f341fb6c14523e5ddc93a880b3026503cf4427061d8cad",
-      "size": 11186
+      "sha256": "68d840e7475a6ce4885207b637f455f1d3ffcee833891df73ff3957099b454b4",
+      "size": 12707
     },
     {
       "path": "android/configure-profiles.mjs",
@@ -5171,9 +5171,9 @@
     }
   ],
   "archive": {
-    "commit": "b5ffa53d3d48ecc6efc6a23e688422d9850172b2",
+    "commit": "2b4ee84009cbd9f81e7432ac492e3ee048e35026",
     "path": "runtime.zip",
-    "sha256": "172c2898c97edba61326377813cc48b911f3f53e4ff68ee1d0a165bc21e935ba",
-    "size": 10579307
+    "sha256": "e0bc61f6a36132159d0f3ba29b9edf62baa5345513604199f4e53bee9231d8e9",
+    "size": 10579871
   }
 }
