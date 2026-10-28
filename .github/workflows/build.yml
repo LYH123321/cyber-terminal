@@ -1,6 +1,6 @@
 name: Build APK
 on:
-  workflow_dispatch
+  workflow_dispatch:
 jobs:
   build:
     runs-on: ubuntu-24.04
@@ -16,20 +16,9 @@ jobs:
       - name: Install SDK pieces
         run: |
           SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
-          ls -la "$ANDROID_HOME/cmdline-tools/" || true
-          "$SDKM" --version
-          mkdir -p "$ANDROID_HOME/licenses"
-          printf '
-24333f8a63b6825ea9c5514f83c2829b004d1fee
-' > "$ANDROID_HOME/licenses/android-sdk-license"
-          printf '
-84831b9409646a918e30573bab4c9c91346d8abd
-' > "$ANDROID_HOME/licenses/android-sdk-preview-license"
-          printf '
-d975f751698a77b662f1254ddbeed3901e976f5a
-' > "$ANDROID_HOME/licenses/intel-android-extra-license"
-          "$SDKM" --install "platforms;android-37" "build-tools;37.0.0" "ndk;26.3.11579264" > /tmp/sdk.log 2>&1 || { { echo "## SDK INSTALL LOG"; cat /tmp/sdk.log; } >> "$GITHUB_STEP_SUMMARY"; exit 1; }
-          echo "SDK install OK" >> "$GITHUB_STEP_SUMMARY"
+          printf '\n24333f8a63b6825ea9c5514f83c2829b004d1fee\n' > "$ANDROID_HOME/licenses/android-sdk-license"
+          printf '\n84831b9409646a918e30573bab4c9c91346d8abd\n' > "$ANDROID_HOME/licenses/android-sdk-preview-license"
+          "$SDKM" --install "platforms;android-37" "build-tools;37.0.0" "ndk;26.3.11579264" > /tmp/sdk.log 2>&1 || { tail -c 900 /tmp/sdk.log; exit 1; }
       - name: Build
         run: bash android/apk/build.sh
         env:
