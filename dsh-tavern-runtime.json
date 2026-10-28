@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "revision": "0094bd194cc0e0968d822518ebecf0cb05e8730a",
-  "releaseSequence": 42,
+  "revision": "499c12796a21dbfb3b1f397091f404683c938c37",
+  "releaseSequence": 43,
   "version": "3.1.0",
   "files": [
     {
@@ -66,8 +66,8 @@
     },
     {
       "path": "android/apk/VideoActivity.java",
-      "sha256": "7e621212683a86184daa66b3d9092094809e0c0717029902475e7a5e1fa353a4",
-      "size": 12861
+      "sha256": "3726bfbe8dc796d9b917ad9e57b2973d610082fcb6b9a56b185b60dd92a3bf34",
+      "size": 12859
     },
     {
       "path": "android/configure-profiles.mjs",
@@ -5171,9 +5171,9 @@
     }
   ],
   "archive": {
-    "commit": "6a6a8ce71e295b22fb757ad3a6a18f3a78d89cdc",
+    "commit": "78e5790b76cefd7345b38d145c4e20958a4fab62",
     "path": "runtime.zip",
-    "sha256": "863378c4b53ad5a6ee440a35d429d2440f8877c335de9475b34d1fbbb8093782",
-    "size": 10580598
+    "sha256": "93508b0f9563c901e5925dde3161194cdaf07f7cd2179308d29af1a6b909c651",
+    "size": 10580596
   }
 }
