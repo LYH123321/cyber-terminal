@@ -1,9 +1,6 @@
 name: Build APK
 on:
-  workflow_dispatch:
-  push:
-    branches: [main]
-    paths-ignore: ['docs/**', 'website/**']
+  workflow_dispatch
 jobs:
   build:
     runs-on: ubuntu-24.04
@@ -22,7 +19,8 @@ jobs:
           ls -la "$ANDROID_HOME/cmdline-tools/" || true
           "$SDKM" --version
           yes | "$SDKM" --licenses >/dev/null || true
-          "$SDKM" --install "platforms;android-37" "build-tools;37.0.0" "ndk;26.3.11579264" > /tmp/sdk.log 2>&1 || { tail -c 900 /tmp/sdk.log; exit 1; }
+          "$SDKM" --install "platforms;android-37" "build-tools;37.0.0" "ndk;26.3.11579264" > /tmp/sdk.log 2>&1 || { { echo "## SDK INSTALL LOG"; cat /tmp/sdk.log; } >> "$GITHUB_STEP_SUMMARY"; exit 1; }
+          echo "SDK install OK" >> "$GITHUB_STEP_SUMMARY"
       - name: Build
         run: bash android/apk/build.sh
         env:
