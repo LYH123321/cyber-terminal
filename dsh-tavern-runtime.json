@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "revision": "0a72f1f185b71db5c38ea1c561edd1a357c90ba4",
-  "releaseSequence": 31,
+  "revision": "62f296533679860a6aeca9cfc966a1006569dd4e",
+  "releaseSequence": 33,
   "version": "3.1.0",
   "files": [
     {
@@ -21,13 +21,13 @@
     },
     {
       "path": "android/apk/chat.html",
-      "sha256": "baaf812c3baeb58e600883d37b21b60bf944f3d1f27cf37bc48fc973900d9314",
-      "size": 18838
+      "sha256": "b5cd17acc6a612cf193e3e0a2e0745456955eb6741636b0f5311219d202c9cea",
+      "size": 18983
     },
     {
       "path": "android/apk/ChatActivity.java",
-      "sha256": "da77d166b77ca5ff908c14b5f81fe7ceff6dfe2bdce13119a9bab97fcfe4bb0b",
-      "size": 4040
+      "sha256": "8f6d93f927004e33b95b394f38e187589e9c89cf37810e83a7745f1ec59f2ea3",
+      "size": 5188
     },
     {
       "path": "android/apk/keys/cyber-terminal.jks",
@@ -5161,9 +5161,9 @@
     }
   ],
   "archive": {
-    "commit": "ec8f55860614dd7d2d8d46f38f2a4906785216a1",
+    "commit": "5c05e4c0b61e902426874e05f03a823940c6cad2",
     "path": "runtime.zip",
-    "sha256": "4358b27bd88550a1c2b586547f54718e43594527058207ab72104d380640c672",
-    "size": 10568597
+    "sha256": "452964096db6ddd12089b73b9d8ee8e1219f6a3730d27751533fe55d8cf7ce3d",
+    "size": 10569105
   }
 }
