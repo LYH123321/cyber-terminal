@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>日常聊天</title>
+<style>
+:root{
+  --bg:#0d1117;--card:#161b22;--line:#21262d;--text:#e6edf3;--muted:#8b949e;
+  --primary:#58a6ff;--user:#1f6feb;--ok:#3fb950;--err:#f85149;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,'Noto Sans SC',sans-serif;overflow:hidden}
+#app{display:flex;flex-direction:column;height:100%}
+header{
+  display:flex;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top) + 8px) 14px 8px;
+  background:var(--card);border-bottom:1px solid var(--line);flex-shrink:0;
+}
+header h1{font-size:16px;font-weight:600;flex:1}
+.hbtn{background:none;border:none;color:var(--primary);font-size:13px;padding:8px;cursor:pointer}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0}
+.dot.on{background:var(--ok)}
+#msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch}
+.msg{max-width:86%;padding:10px 13px;border-radius:14px;font-size:15px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+.msg.user{align-self:flex-end;background:var(--user);border-bottom-right-radius:4px}
+.msg.bot{align-self:flex-start;background:var(--card);border:1px solid var(--line);border-bottom-left-radius:4px}
+.msg.sys{align-self:center;background:none;color:var(--muted);font-size:12px;max-width:100%;padding:2px}
+.msg.tool{align-self:flex-start;background:#1c2530;border:1px solid #2d3a4a;color:#9fb8d4;font-family:monospace;font-size:12px;max-width:100%;border-radius:8px}
+.msg .tname{color:var(--primary);font-weight:600;font-size:12px;display:block;margin-bottom:4px}
+#inputbar{
+  display:flex;gap:8px;padding:8px 12px calc(env(safe-area-inset-bottom) + 8px);
+  background:var(--card);border-top:1px solid var(--line);flex-shrink:0;
+}
+#inp{
+  flex:1;background:var(--bg);border:1px solid var(--line);border-radius:20px;color:var(--text);
+  padding:11px 14px;font-size:15px;outline:none;resize:none;max-height:120px;
+}
+#send{
+  background:var(--primary);color:#fff;border:none;border-radius:20px;width:44px;height:44px;
+  font-size:18px;flex-shrink:0;cursor:pointer;
+}
+#send:disabled{opacity:.4}
+/* 设置面板 */
+#panel{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;z-index:10}
+#panel.open{display:block}
+#sheet{
+  position:absolute;left:0;right:0;bottom:0;background:var(--card);border-radius:16px 16px 0 0;
+  padding:18px 16px calc(env(safe-area-inset-bottom) + 20px);max-height:80vh;overflow-y:auto;
+}
+#sheet h2{font-size:15px;margin-bottom:14px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+.field input,.field textarea{
+  width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--text);
+  padding:10px;font-size:14px;font-family:monospace;outline:none;
+}
+.field textarea{height:64px;resize:vertical}
+.rowbtns{display:flex;gap:10px;margin-top:6px}
+.btn{flex:1;padding:11px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:14px;cursor:pointer}
+.btn.pri{background:var(--primary);color:#fff;border:none;font-weight:600}
+.hint{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.5}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <span class="dot" id="statusDot"></span>
+    <h1>日常聊天</h1>
+    <button class="hbtn" id="btnNew">新对话</button>
+    <button class="hbtn" id="btnCfg">⚙ 设置</button>
+  </header>
+  <div id="msgs"></div>
+  <div id="inputbar">
+    <textarea id="inp" rows="1" placeholder="输入消息…"></textarea>
+    <button id="send">➤</button>
+  </div>
+</div>
+<div id="panel"><div id="sheet">
+  <h2>模型与接口设置</h2>
+  <div class="field"><label>API Base URL</label><input id="cfgUrl" placeholder="https://api.ant-ling.com/v1"></div>
+  <div class="field"><label>API Key</label><input id="cfgKey" type="password" placeholder="sk-…"></div>
+  <div class="field"><label>模型</label><input id="cfgModel" placeholder="Ling-3.1-flash"></div>
+  <div class="field"><label>系统提示词</label><textarea id="cfgSys"></textarea></div>
+  <div class="field"><label>3090 桥（设备工具）</label><input id="cfgBridge" placeholder="http://127.0.0.1:3090">
+    <div class="hint">留空禁用工具。App 启动服务器后自动可用；调用 /app/* 与 /exec 端点控制手机。</div></div>
+  <div class="rowbtns">
+    <button class="btn" id="cfgCancel">取消</button>
+    <button class="btn pri" id="cfgSave">保存</button>
+  </div>
+</div></div>
+<script>
+'use strict';
+// ---------- 原生桥 ----------
+const NATIVE = !!window.Android;
+const P = {
+  get(k){ return NATIVE ? Android.getPref(k) : (localStorage.getItem(k)||''); },
+  set(k,v){ NATIVE ? Android.setPref(k,v) : localStorage.setItem(k,v); }
+};
+// ---------- 配置 ----------
+const DEF_SYS = '你是「卡芙卡」，用户的随身 AI 助手，住在用户的安卓手机里。语气轻快、有点小恶魔的俏皮，偶尔用「~」结尾。你可以通过工具操作用户的手机。回复保持简洁自然。';
+let CFG = {
+  url: P.get('url') || 'https://api.ant-ling.com/v1',
+  key: P.get('key') || '',
+  model: P.get('model') || 'Ling-3.1-flash',
+  sys: P.get('sys') || DEF_SYS,
+  bridge: P.get('bridge') || 'http://127.0.0.1:3090'
+};
+// ---------- 状态 ----------
+let history = [];   // {role, content}
+let busy = false;
+const $ = id => document.getElementById(id);
+const msgs = $('msgs');
+// ---------- 渲染 ----------
+function addMsg(cls, text, tname){
+  const d = document.createElement('div');
+  d.className = 'msg ' + cls;
+  if (tname){ const n=document.createElement('span'); n.className='tname'; n.textContent=tname; d.appendChild(n); }
+  const s=document.createElement('span'); s.textContent=text; d.appendChild(s);
+  msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight;
+  return s;
+}
+function sys(text){ addMsg('sys', text); }
+function setStatus(ok){ $('statusDot').className = 'dot' + (ok?' on':''); }
+// ---------- 工具定义（3090 桥） ----------
+function toolDefs(){
+  if (!CFG.bridge) return [];
+  return [{
+    type:'function', function:{
+      name:'device_exec',
+      description:'读取手机状态或操作手机。cmd 取值：status=设备信息(电量/内存/网络/屏幕)、apps=已装应用列表、ui_dump=读屏幕内容、notify=发通知(需 text,title)、battery=电量、net=网络状态、help=全部端点清单',
+      parameters:{ type:'object', properties:{
+        cmd:{type:'string',enum:['status','apps','ui_dump','notify','battery','net','help']},
+        text:{type:'string',description:'notify 的正文'},
+        title:{type:'string',description:'notify 的标题'}
+      }, required:['cmd'] }
+    }
+  }];
+}
+async function callTool(args){
+  const b = CFG.bridge.replace(/\/+$/,'');
+  const token = NATIVE ? Android.token() : '';
+  const H = { 'X-Token': token };
+  try{
+    let r;
+    switch(args.cmd){
+      case 'status': case 'apps': case 'help':
+        r = await fetch(b + '/app/' + (args.cmd==='status'?'device':args.cmd==='apps'?'apps':'help'), {headers:H}); break;
+      case 'ui_dump':
+        r = await fetch(b + '/app/ui/dump', {headers:H}); break;
+      case 'battery': case 'net':
+        r = await fetch(b + '/app/device', {headers:H}); break;
+      case 'notify':
+        r = await fetch(b + '/app/notify?title=' + encodeURIComponent(args.title||'通知') +
+          '&text=' + encodeURIComponent(args.text||''), {headers:H}); break;
+      default: return '未知命令 ' + args.cmd;
+    }
+    const t = await r.text();
+    return t.length > 3000 ? t.slice(0,3000) + '…(截断)' : t;
+  }catch(e){
+    return '工具调用失败：' + e.message + '（桥未启动？先在主页启动服务器）';
+  }
+}
+// ---------- 对话主流程 ----------
+async function send(){
+  const text = $('inp').value.trim();
+  if (!text || busy) return;
+  if (!CFG.key){ openCfg(); sys('请先在设置中填写 API Key'); return; }
+  busy = true; $('send').disabled = true; $('inp').value = '';
+  addMsg('user', text);
+  history.push({role:'user', content:text});
+  await round(0);
+  busy = false; $('send').disabled = false;
+}
+async function round(depth){
+  if (depth > 4){ addMsg('bot','（工具调用次数超限，已停止）'); return; }
+  const body = {
+    model: CFG.model,
+    messages: [{role:'system',content:CFG.sys}, ...history.slice(-30)],
+    stream: true
+  };
+  const tools = toolDefs();
+  if (tools.length) body.tools = tools;
+  let r;
+  try{
+    r = await fetch(CFG.url.replace(/\/+$/,'') + '/chat/completions', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + CFG.key },
+      body: JSON.stringify(body)
+    });
+  }catch(e){
+    addMsg('bot','❌ 网络错误：' + e.message); history.pop(); return;
+  }
+  if (!r.ok){
+    const t = await r.text();
+    addMsg('bot','❌ HTTP ' + r.status + '：' + t.slice(0,300)); history.pop(); return;
+  }
+  // 解析 SSE 流
+  const reader = r.body.getReader();
+  const dec = new TextDecoder();
+  let buf = '', full = '', toolCalls = [];
+  let span = null;
+  while(true){
+    const {done, value} = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, {stream:true});
+    const lines = buf.split('\n');
+    buf = lines.pop();
+    for (const line of lines){
+      if (!line.startsWith('data:')) continue;
+      const data = line.slice(5).trim();
+      if (data === '[DONE]') continue;
+      let j; try{ j = JSON.parse(data); }catch{ continue; }
+      const d = j.choices && j.choices[0] && j.choices[0].delta;
+      if (!d) continue;
+      if (d.content){
+        if (!span) span = addMsg('bot','');
+        full += d.content; span.textContent = full; msgs.scrollTop = msgs.scrollHeight;
+      }
+      if (d.tool_calls){
+        for (const tc of d.tool_calls){
+          const i = tc.index || 0;
+          toolCalls[i] = toolCalls[i] || {id:'', name:'', args:''};
+          if (tc.id) toolCalls[i].id = tc.id;
+          if (tc.function && tc.function.name) toolCalls[i].name += tc.function.name;
+          if (tc.function && tc.function.arguments) toolCalls[i].args += tc.function.arguments;
+        }
+      }
+    }
+  }
+  toolCalls = toolCalls.filter(t => t && t.name);
+  if (full) history.push({role:'assistant', content:full});
+  if (toolCalls.length){
+    // 记录 assistant 的 tool_calls 消息
+    history.push({role:'assistant', content: full || null,
+      tool_calls: toolCalls.map(t=>({id:t.id, type:'function', function:{name:t.name, arguments:t.args}}))});
+    for (const t of toolCalls){
+      let args = {}; try{ args = JSON.parse(t.args || '{}'); }catch{}
+      const box = addMsg('tool','', '🔧 ' + t.name + ' ' + (args.cmd||''));
+      const result = await callTool(args);
+      box.textContent = (result||'').slice(0,150);
+      history.push({role:'tool', tool_call_id:t.id, content:String(result).slice(0,3000)});
+    }
+    await round(depth + 1);
+    return;
+  }
+  if (!full && !toolCalls.length) addMsg('bot','（空回复）');
+  setStatus(true);
+}
+// ---------- 设置面板 ----------
+function openCfg(){
+  $('cfgUrl').value = CFG.url; $('cfgKey').value = CFG.key;
+  $('cfgModel').value = CFG.model; $('cfgSys').value = CFG.sys;
+  $('cfgBridge').value = CFG.bridge;
+  $('panel').classList.add('open');
+}
+$('btnCfg').onclick = openCfg;
+$('cfgCancel').onclick = () => $('panel').classList.remove('open');
+$('cfgSave').onclick = () => {
+  CFG = { url:$('cfgUrl').value.trim(), key:$('cfgKey').value.trim(),
+    model:$('cfgModel').value.trim()||'Ling-3.1-flash',
+    sys:$('cfgSys').value||DEF_SYS, bridge:$('cfgBridge').value.trim() };
+  P.set('url',CFG.url); P.set('key',CFG.key); P.set('model',CFG.model);
+  P.set('sys',CFG.sys); P.set('bridge',CFG.bridge);
+  $('panel').classList.remove('open');
+  sys('设置已保存');
+  if (NATIVE) Android.toast('已保存');
+};
+$('btnNew').onclick = () => {
+  history = []; msgs.innerHTML = '';
+  sys('新对话开始。模型：' + CFG.model);
+};
+// ---------- 输入区 ----------
+$('inp').addEventListener('input', function(){
+  this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,120)+'px';
+});
+$('inp').addEventListener('keydown', e => {
+  if (e.key==='Enter' && !e.shiftKey){ e.preventDefault(); send(); }
+});
+$('send').onclick = send;
+// ---------- 启动 ----------
+sys('赛博终端 · 日常聊天  |  ' + (NATIVE ? '原生桥已连接' : '浏览器预览模式'));
+if (!CFG.key) sys('点右上「设置」填 API Key 开始使用');
+history.push({role:'system', content:''}); history.pop(); // noop warm
+</script>
+</body>
+</html>
