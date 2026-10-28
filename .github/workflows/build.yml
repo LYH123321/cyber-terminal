@@ -31,4 +31,4 @@ jobs:
         if: always()
         with:
           name: apk
-          path: output/**/*.apk*
+          path: output/**/*.apk
