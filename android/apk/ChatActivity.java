@@ -35,16 +35,29 @@ public class ChatActivity extends Activity {
       return prefs(ChatActivity.this).getString(key, "");
     }
 
-    /** 原生 HTTP GET（带桥 token）：WebView 的 https origin 拿不到 http://127.0.0.1 桥
-     * （mixed content 与 CORS 双拦），由原生层代发，返回响应体文本。 */
+    /** 原生 HTTP：WebView 的 https origin 拿不到 http://127.0.0.1 的桥/本地模型
+     * （mixed content 与 CORS 双拦），由原生层代发。GET 默认带桥 token；jsonBody 非空则 POST。 */
     @JavascriptInterface
-    public String http(String url) {
+    public String http(String url, String jsonBody, String authKey) {
       java.net.HttpURLConnection c = null;
       try {
         c = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
-        c.setConnectTimeout(5000);
-        c.setReadTimeout(20000);
-        c.setRequestProperty("X-Token", HttpShellService.currentToken());
+        c.setConnectTimeout(8000);
+        c.setReadTimeout(120000);
+        if (jsonBody != null && !jsonBody.isEmpty()) {
+          c.setRequestMethod("POST");
+          c.setDoOutput(true);
+          c.setRequestProperty("Content-Type", "application/json");
+          if (authKey != null && !authKey.isEmpty())
+            c.setRequestProperty("Authorization", "Bearer " + authKey);
+          byte[] body = jsonBody.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+          c.setFixedLengthStreamingMode(body.length);
+          try (java.io.OutputStream os = c.getOutputStream()) {
+            os.write(body);
+          }
+        } else {
+          c.setRequestProperty("X-Token", HttpShellService.currentToken());
+        }
         int code = c.getResponseCode();
         java.io.InputStream in = code >= 400 ? c.getErrorStream() : c.getInputStream();
         if (in == null) return "[HTTP " + code + "]";
