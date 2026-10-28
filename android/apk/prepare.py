@@ -242,11 +242,15 @@ tasks.configureEach {
     # ===== 赛博终端·第一刀：日常聊天页（原生 Activity + asset HTML，免启动直连云端 API）=====
     shutil.copyfile(HERE / 'ChatActivity.java', java / 'ui/ChatActivity.java')
     shutil.copyfile(HERE / 'chat.html', assets / 'chat.html')
+    # ===== 赛博终端·第二点五刀：视频陪看页（本地 3990 服务器 + video.html）=====
+    shutil.copyfile(HERE / 'VideoActivity.java', java / 'ui/VideoActivity.java')
+    shutil.copyfile(HERE / 'video.html', assets / 'video.html')
     manifest = app / 'src/main/AndroidManifest.xml'
     replace(manifest,
             '        <activity android:name=".ui.ModelSetupActivity" android:exported="false" />',
             '        <activity android:name=".ui.ModelSetupActivity" android:exported="false" />\n'
-            '        <activity android:name=".ui.ChatActivity" android:exported="true" android:windowSoftInputMode="adjustResize" />')
+            '        <activity android:name=".ui.ChatActivity" android:exported="true" android:windowSoftInputMode="adjustResize" />\n'
+            '        <activity android:name=".ui.VideoActivity" android:exported="true" android:configChanges="orientation|screenSize|keyboardHidden" />')
     launch_xml = app / 'src/main/res/layout/fragment_launch.xml'
     chat_entry = (
         '                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/line" />\n'
@@ -255,6 +259,15 @@ tasks.configureEach {
         '                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="12dp">\n'
         '                            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="日常聊天" android:textSize="13sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />\n'
         '                            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="免启动直连模型 · 支持设备工具" android:textSize="11sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="4dp" />\n'
+        '                        </LinearLayout>\n'
+        '                        <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_ui2_chevron" android:contentDescription="@null" app:tint="@color/text_muted" />\n'
+        '                    </LinearLayout>\n'
+        '                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/line" />\n'
+        '                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:id="@+id/launch_video" android:orientation="horizontal" android:minHeight="64dp" android:padding="13dp" android:clickable="true" android:focusable="true" android:background="?attr/selectableItemBackground" android:gravity="center_vertical">\n'
+        '                        <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_ui_link" android:background="@drawable/bg_logo" android:padding="8dp" android:contentDescription="@null" app:tint="@color/primary" />\n'
+        '                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="12dp">\n'
+        '                            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="卡芙卡陪看" android:textSize="13sp" android:textColor="@color/text" android:includeFontPadding="false" android:textStyle="bold" />\n'
+        '                            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="本地视频 + 双语字幕 + 陪看吐槽" android:textSize="11sp" android:textColor="@color/text_secondary" android:includeFontPadding="false" android:layout_marginTop="4dp" />\n'
         '                        </LinearLayout>\n'
         '                        <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_ui2_chevron" android:contentDescription="@null" app:tint="@color/text_muted" />\n'
         '                    </LinearLayout>\n'
@@ -273,7 +286,9 @@ tasks.configureEach {
         .setOnClickListener(
             x -> startActivity(new Intent(requireContext(), ModelSetupActivity.class)));
     v.findViewById(R.id.launch_chat)
-        .setOnClickListener(x -> ChatActivity.open(requireActivity()));''')
+        .setOnClickListener(x -> ChatActivity.open(requireActivity()));
+    v.findViewById(R.id.launch_video)
+        .setOnClickListener(x -> VideoActivity.open(requireActivity()));''')
     replace(java / 'ui/WebPreviewActivity.java',
             '      WebView view = new WebView(new android.content.MutableContextWrapper(this));',
             '''      if (com.deepseekharness.app.BuildConfig.DEBUG) WebView.setWebContentsDebuggingEnabled(true);
