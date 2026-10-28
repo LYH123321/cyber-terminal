@@ -47,6 +47,17 @@ video{width:100%;max-height:56vh;display:block}
 #novel .kk{color:var(--kafka);font-size:13px;background:rgba(199,125,255,.1);border-left:3px solid var(--kafka);padding:6px 10px;border-radius:0 8px 8px 0}
 #toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#000c;color:#fff;font-size:12px;padding:8px 14px;border-radius:20px;opacity:0;transition:opacity .3s;pointer-events:none;max-width:80%}
 #toast.show{opacity:1}
+#cfg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;z-index:10}
+#cfg.open{display:block}
+#cfg .sheet{position:absolute;left:0;right:0;bottom:0;background:var(--card);border-radius:16px 16px 0 0;padding:18px 16px calc(env(safe-area-inset-bottom) + 20px)}
+#cfg h2{font-size:15px;margin-bottom:12px}
+#cfg .f{margin-bottom:12px}
+#cfg label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
+#cfg input{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:10px;font-size:13px;font-family:monospace;outline:none;box-sizing:border-box}
+#cfg .hint{font-size:11px;color:var(--muted);margin-top:4px}
+#cfg .row{display:flex;gap:10px;margin-top:8px}
+#cfg .row button{flex:1;padding:11px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:14px}
+#cfg .row .pri{background:var(--primary);color:#fff;border:none;font-weight:600}
 </style>
 </head>
 <body>
@@ -55,6 +66,7 @@ video{width:100%;max-height:56vh;display:block}
     <button class="hbtn" id="btnBack">‹ 返回</button>
     <h1>📺 卡芙卡陪看</h1>
     <button class="hbtn" id="btnKfk">💬 吐槽</button>
+    <button class="hbtn" id="btnSet">⚙</button>
   </header>
 
   <div id="lib"></div>
@@ -77,6 +89,14 @@ video{width:100%;max-height:56vh;display:block}
   </div>
 </div>
 <div id="toast"></div>
+<div id="cfg"><div class="sheet">
+  <h2>陪看模型（独立于日常聊天）</h2>
+  <div class="f"><label>API Base URL</label><input id="vUrl" placeholder="留空 = 沿用日常聊天的配置">
+    <div class="hint">例：https://api.ant-ling.com/v1 或本地 http://127.0.0.1:8001/v1</div></div>
+  <div class="f"><label>API Key</label><input id="vKey" type="password" placeholder="留空 = 沿用日常聊天"></div>
+  <div class="f"><label>模型</label><input id="vModel" placeholder="留空 = 沿用日常聊天"></div>
+  <div class="row"><button id="vCancel">取消</button><button class="pri" id="vSave">保存</button></div>
+</div></div>
 <script>
 'use strict';
 const $=id=>document.getElementById(id);
@@ -86,6 +106,21 @@ const CFG={url:P.get('url')||'',key:P.get('key')||'',model:P.get('model')||'Ling
 let CUR=null;   // {name,sub}
 let CUES=[];    // {t0,t1,o,z}
 let curIdx=-1, novelMode=false, trBusy=false, kfkBusy=false, lastKfk=-99;
+// 陪看页独立模型配置：留空回落到日常聊天配置（聊天可用 glm，陪看用宽松/本地模型）
+function loadCfg(){
+  const u=P.get('vurl'),k=P.get('vkey'),m=P.get('vmodel');
+  CFG.url=u||P.get('url')||'';
+  CFG.key=k||P.get('key')||'';
+  CFG.model=m||P.get('model')||'Ling-3.1-flash';
+}
+loadCfg();
+$('btnSet').onclick=()=>{$('vUrl').value=P.get('vurl');$('vKey').value=P.get('vkey');$('vModel').value=P.get('vmodel');$('cfg').classList.add('open')};
+$('vCancel').onclick=()=>$('cfg').classList.remove('open');
+$('vSave').onclick=()=>{
+  const put=(k,v)=>{NATIVE?Android.setPref&&Android.setPref(k,v):localStorage.setItem(k,v)};
+  put('vurl',$('vUrl').value.trim());put('vkey',$('vKey').value.trim());put('vmodel',$('vModel').value.trim());
+  loadCfg();$('cfg').classList.remove('open');toast('陪看模型已保存');
+};
 
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),2200)}
 function fmt(s){s=Math.max(0,s|0);return String((s/60)|0).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
