@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "revision": "07d33768ace66ff679e422f9a0173bf94cdf2da9",
-  "releaseSequence": 28,
+  "revision": "82807c40df170c77739fa57aeb92ae8cc0236998",
+  "releaseSequence": 29,
   "version": "3.1.0",
   "files": [
     {
@@ -16,8 +16,8 @@
     },
     {
       "path": "android/apk/build.sh",
-      "sha256": "d9ed4df610534705c49e32650a726ee09b9c48963f83e42ff7a8c1ec0d87d016",
-      "size": 4574
+      "sha256": "a8fe7d90c67a9532b50c7f6eab261e692f4b102f98cfe47f71ad539a95d58a0d",
+      "size": 4896
     },
     {
       "path": "android/apk/chat.html",
@@ -30,9 +30,14 @@
       "size": 4040
     },
     {
+      "path": "android/apk/keys/cyber-terminal.jks",
+      "sha256": "9115c0c6dd4b78d7e72c4a3882c4898dc013e50a77e362ec8a6e9b598dae09e5",
+      "size": 2778
+    },
+    {
       "path": "android/apk/prepare.py",
-      "sha256": "f8cdb13b6394b466f0c72cff185a6cd64dc42751e621ff0582729fafc9386f01",
-      "size": 23163
+      "sha256": "64dd6c39020c605ed7b4da6c113617d9207eb47314c20569e7a62a905d58ebdf",
+      "size": 23162
     },
     {
       "path": "android/apk/README.md",
@@ -5156,9 +5161,9 @@
     }
   ],
   "archive": {
-    "commit": "3d8860eb49fa7600cef40ba44d2434937c346311",
+    "commit": "44257c1e33aaa44039751c43e99b85bac1571808",
     "path": "runtime.zip",
-    "sha256": "30d83c25816192a6c5fee975ad23c41a20e055a98a53a9c826e4306f1aa8cfee",
-    "size": 10565624
+    "sha256": "35b703c1752f3afd03302832a0c9d1b1e889fcfbe35a50ec2a738d1074f58a46",
+    "size": 10568597
   }
 }
