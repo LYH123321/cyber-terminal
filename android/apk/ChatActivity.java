@@ -95,8 +95,9 @@ public class ChatActivity extends Activity {
       while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
       return out.toString("UTF-8");
     } catch (Exception e) {
+      String m = String.valueOf(e).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
       return "<html><body style='background:#111;color:#f66;font-family:monospace'>chat.html 加载失败: "
-          + android.util.Html.escapeHtml(String.valueOf(e))
+          + m
           + "</body></html>";
     }
   }
