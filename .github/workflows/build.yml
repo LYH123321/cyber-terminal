@@ -18,10 +18,17 @@ jobs:
         with: { distribution: temurin, java-version: '17' }
       - name: Setup Android SDK
         run: |
-          set -x
-          SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
-          yes | "$SDKM" --licenses || true
-          "$SDKM" --install "platforms;android-37" "build-tools;37.0.0" "ndk;26.3.11579264" "platform-tools"
+          {
+            echo "## SDK probe"
+            echo "ANDROID_HOME=$ANDROID_HOME"
+            ls "$ANDROID_HOME" || true
+            ls "$ANDROID_HOME/cmdline-tools" || true
+            SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+            echo "SDKM=$SDKM"
+            "$SDKM" --version || true
+          } >> "$GITHUB_STEP_SUMMARY"
+          yes | "$SDKM" --licenses >/dev/null 2>&1 || true
+          "$SDKM" --install "platforms;android-37" "build-tools;37.0.0" "ndk;26.3.11579264" 2>&1 | tail -5 >> "$GITHUB_STEP_SUMMARY" || { echo "INSTALL FAILED" >> "$GITHUB_STEP_SUMMARY"; exit 1; }
       - name: Build
         run: bash android/apk/build.sh
         env:
