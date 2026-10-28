@@ -45,6 +45,40 @@ public class VideoActivity extends Activity {
       return prefs(VideoActivity.this).getString(key, "");
     }
 
+    /** 原生 POST（JSON）：绕开 WebView 对 127.0.0.1:8001 本地模型服务的 CORS 限制。 */
+    @JavascriptInterface
+    public String httpPost(String url, String jsonBody, String authKey) {
+      java.net.HttpURLConnection c = null;
+      try {
+        c = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
+        c.setConnectTimeout(8000);
+        c.setReadTimeout(120000);
+        c.setRequestMethod("POST");
+        c.setDoOutput(true);
+        c.setRequestProperty("Content-Type", "application/json");
+        if (authKey != null && !authKey.isEmpty())
+          c.setRequestProperty("Authorization", "Bearer " + authKey);
+        byte[] body = jsonBody.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        c.setFixedLengthStreamingMode(body.length);
+        try (OutputStream os = c.getOutputStream()) {
+          os.write(body);
+        }
+        int code = c.getResponseCode();
+        InputStream in = code >= 400 ? c.getErrorStream() : c.getInputStream();
+        if (in == null) return "{\"error\":\"HTTP " + code + "\"}";
+        java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        byte[] buf = new byte[8192];
+        int n;
+        while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
+        in.close();
+        return new String(out.toByteArray(), java.nio.charset.StandardCharsets.UTF_8);
+      } catch (Exception e) {
+        return "{\"error\":\"" + e + "\"}";
+      } finally {
+        if (c != null) c.disconnect();
+      }
+    }
+
     @JavascriptInterface
     public void toast(String text) {
       runOnUiThread(
