@@ -308,6 +308,80 @@ tasks.configureEach {
             "unlock",''')
     shutil.copyfile(source / 'LICENSE', assets / 'DSHA-LICENSE.txt')
 
+    # ============ 赛博终端·第二刀：桥能力扩展 ============
+    # 1) DshaAccessibilityService 加 uiLongPress（复用现有 gesture() 机制，把 stroke 时长拉长）
+    acc = source / 'app/src/main/java/com/deepseekharness/app/DshaAccessibilityService.java'
+    anchor = '  /** 按坐标点按。坐标从 uiDump 的「中心=」里取。 */\n'
+    replace(acc, anchor, '''  /** 长按（点住不动 ms 毫秒）。坐标从 uiDump 的「中心=」里取。 */
+  public static String uiLongPress(int x, int y, int ms) {
+    if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.N) {
+      return "手势长按需 Android 7+（当前系统过旧）";
+    }
+    DshaAccessibilityService s = instance;
+    if (s == null) return com.deepseekharness.app.util.UiText.text(NOT_READY);
+    android.graphics.Path p = new android.graphics.Path();
+    p.moveTo(x, y);
+    android.accessibilityservice.GestureDescription.StrokeDescription stroke =
+        new android.accessibilityservice.GestureDescription.StrokeDescription(p, 0, Math.max(ms, 300));
+    android.accessibilityservice.GestureDescription g =
+        new android.accessibilityservice.GestureDescription.Builder().addStroke(stroke).build();
+    return s.gesture(g, com.deepseekharness.app.util.UiText.format("长按 (%d,%d) %dms", x, y, ms));
+  }
+''' + anchor)
+
+    # 2) DshaAccessibilityService 加 uiFindText：按文字找控件返回坐标（不点击）
+    anchor3 = '  /** 长按（点住不动 ms 毫秒）。坐标从 uiDump 的「中心=」里取。 */\n'
+    replace(acc, anchor3, '''  /** 按文字查找控件位置，不点击。返回中心坐标和区域。 */
+  public static String uiFindText(String text) {
+    DshaAccessibilityService s = instance;
+    if (s == null) return com.deepseekharness.app.util.UiText.text(NOT_READY);
+    if (text == null || text.isEmpty())
+      return com.deepseekharness.app.util.UiText.text("[ERR] 要找的文字不能为空");
+    AccessibilityNodeInfo root = null;
+    try {
+      root = activeWindow(s);
+      if (root == null) return com.deepseekharness.app.util.UiText.text("[ERR] 取不到当前窗口");
+      AccessibilityNodeInfo hit = findClickableByText(root, text, 0);
+      if (hit == null)
+        return com.deepseekharness.app.util.UiText.format(
+            "[ERR] 屏幕上找不到「%s」", text);
+      android.graphics.Rect rect = new android.graphics.Rect();
+      hit.getBoundsInScreen(rect);
+      int cx = rect.centerX(), cy = rect.centerY();
+      try { hit.recycle(); } catch (Throwable ignored) {}
+      return com.deepseekharness.app.util.UiText.format(
+          "「%s」中心=(%d,%d) 区域=%d,%d,%d,%d", text, cx, cy, rect.left, rect.top, rect.right, rect.bottom);
+    } finally {
+      if (root != null) try { root.recycle(); } catch (Throwable ignored) {}
+    }
+  }
+''' + anchor3)
+
+    # 3) HttpShellService 路由表插 longpress/text 端点（未知端点提示行之前）
+    shell = source / 'app/src/main/java/com/deepseekharness/app/HttpShellService.java'
+    anchor2 = '      return com.deepseekharness.app.util.UiText.text("[ERR] 未知端点（可用：dump/tap/input/key/swipe）");'
+    replace(shell, anchor2, '''      if (r.equals("/app/ui/longpress")) {
+        int x = intParam(q, "x", -1);
+        int y = intParam(q, "y", -1);
+        int ms = intParam(q, "ms", 600);
+        if (x < 0 || y < 0)
+          return com.deepseekharness.app.util.UiText.text("[ERR] 需要 ?x=&y=（可选 &ms=）");
+        if (!uiAuthorizedForTarget(
+            target, com.deepseekharness.app.util.UiText.format("长按 (%s,%s)", x, y)))
+          return com.deepseekharness.app.util.UiText.text("[ERR] 你拒绝了这次长按");
+        return DshaAccessibilityService.uiLongPress(x, y, ms);
+      }
+      if (r.equals("/app/ui/text")) {
+        String text = getParam(q, "text", "");
+        if (text.isEmpty())
+          return com.deepseekharness.app.util.UiText.text("[ERR] 需要 ?text=");
+        if (!uiAuthorizedForTarget(
+            target, com.deepseekharness.app.util.UiText.text("查找文字「" + shortText(text) + "」的位置")))
+          return com.deepseekharness.app.util.UiText.text("[ERR] 你拒绝了这次查找");
+        return DshaAccessibilityService.uiFindText(text);
+      }
+      return com.deepseekharness.app.util.UiText.text("[ERR] 未知端点（可用：dump/tap/input/key/swipe/longpress/text）");''')
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
