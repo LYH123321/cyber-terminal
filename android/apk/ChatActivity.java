@@ -35,6 +35,32 @@ public class ChatActivity extends Activity {
       return prefs(ChatActivity.this).getString(key, "");
     }
 
+    /** 原生 HTTP GET（带桥 token）：WebView 的 https origin 拿不到 http://127.0.0.1 桥
+     * （mixed content 与 CORS 双拦），由原生层代发，返回响应体文本。 */
+    @JavascriptInterface
+    public String http(String url) {
+      java.net.HttpURLConnection c = null;
+      try {
+        c = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
+        c.setConnectTimeout(5000);
+        c.setReadTimeout(20000);
+        c.setRequestProperty("X-Token", HttpShellService.currentToken());
+        int code = c.getResponseCode();
+        java.io.InputStream in = code >= 400 ? c.getErrorStream() : c.getInputStream();
+        if (in == null) return "[HTTP " + code + "]";
+        java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        byte[] buf = new byte[8192];
+        int n;
+        while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
+        in.close();
+        return new String(out.toByteArray(), java.nio.charset.StandardCharsets.UTF_8);
+      } catch (Exception e) {
+        return "[ERR] " + e;
+      } finally {
+        if (c != null) c.disconnect();
+      }
+    }
+
     @JavascriptInterface
     public void setPref(String key, String value) {
       prefs(ChatActivity.this).edit().putString(key, value).apply();
