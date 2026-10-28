@@ -146,6 +146,11 @@ function toolDefs(){
     f('sensors','读传感器：不传参数返回列表；传 name 读值（light/accel/gyro/pressure/proximity/steps…）',{name:{type:'string'}}),
     f('torch','手电筒开关',{on:{type:'boolean'}}),
     f('exec_shell','执行受保护的设备 shell 命令（文件操作/进程管理等，有安全策略）',{cmd:{type:'string',description:'单条命令'}}),
+    f('read_file','读取设备上的目录列表或文本文件（256KiB）',{path:{type:'string',description:'绝对路径，如 /sdcard/Download'}}),
+    f('location','获取当前位置（需用户在配置页开启，返回 DISABLED/NO_PERMISSION 时告知用户去开）',{fresh:{type:'boolean',description:'true=强制重新定位'}}),
+    f('export_file','把容器内生成的产物交给用户（落到 Download/DSHA 目录）',{path:{type:'string',description:'容器内文件路径，如 /root/report.md'}}),
+    f('toast','App 内浮动提示（轻量，不打扰）',{text:{type:'string'}}),
+    f('vscreen','独立虚拟屏操作（Android 11+ 后台第二屏，不打扰前台）。action：status=查状态/frameSeq、create=创建(orientation portrait|landscape)、launch=启动应用(pkg)、see=取当前画面文字布局、tap=x,y+frameSeq、swipe、type=输入文字、key、close=关闭',{action:{type:'string',enum:['status','create','launch','see','tap','swipe','type','key','close']},orientation:{type:'string',enum:['portrait','landscape']},pkg:{type:'string'},x:{type:'integer'},y:{type:'integer'},x1:{type:'integer'},y1:{type:'integer'},x2:{type:'integer'},y2:{type:'integer'},text:{type:'string'},name:{type:'string'},frameSeq:{type:'integer',description:'必须携带 see 返回的最新 frameSeq'}}),
   ];
 }
 async function callTool(name, args){
@@ -174,6 +179,26 @@ async function callTool(name, args){
       case 'sensors': url = args.name ? b+'/app/sensor?'+q({name:args.name}) : b+'/app/sensors'; break;
       case 'torch': url = b+'/app/torch?on='+(args.on===false?0:1); break;
       case 'exec_shell': url = b+'/exec?'+q({cmd:args.cmd}); break;
+      case 'read_file': url = b+'/app/readfile?'+q({path:args.path}); break;
+      case 'location': url = b+'/app/location'+(args.fresh?'?fresh=1':''); break;
+      case 'export_file': url = b+'/app/export?'+q({path:args.path}); break;
+      case 'toast': url = b+'/app/toast?'+q({text:args.text||''}); break;
+      case 'vscreen': {
+        const v = b+'/app/vscreen/';
+        switch(args.action){
+          case 'status': url = v+'status'; break;
+          case 'create': url = v+'create?orientation='+(args.orientation||'portrait'); break;
+          case 'launch': url = v+'launch?'+q({package:args.pkg}); break;
+          case 'see': url = v+'see'; break;
+          case 'tap': url = v+'tap?'+q({x:args.x,y:args.y,frameSeq:args.frameSeq}); break;
+          case 'swipe': url = v+'swipe?'+q({x1:args.x1,y1:args.y1,x2:args.x2,y2:args.y2,frameSeq:args.frameSeq}); break;
+          case 'type': url = v+'type?'+q({text:args.text,frameSeq:args.frameSeq}); break;
+          case 'key': url = v+'key?'+q({name:args.name,frameSeq:args.frameSeq}); break;
+          case 'close': url = v+'close'; break;
+          default: return '未知 vscreen 动作 ' + args.action;
+        }
+        break;
+      }
       default: return '未知工具 ' + name;
     }
     const r = await fetch(url, {headers:H});
