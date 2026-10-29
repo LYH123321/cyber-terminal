@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "revision": "499c12796a21dbfb3b1f397091f404683c938c37",
-  "releaseSequence": 43,
+  "revision": "2a803b4db20f9bbdd9fdffc68a9e25997b019c62",
+  "releaseSequence": 44,
   "version": "3.1.0",
   "files": [
     {
@@ -21,8 +21,8 @@
     },
     {
       "path": "android/apk/chat.html",
-      "sha256": "6ec506f921abdea1b5d3ea957d5fe0e35ff01a2f88c4acdcb3068038bad27dae",
-      "size": 18346
+      "sha256": "fe2790253983d3c005ec219bb0791081f324c5a2acf556997dc1473eed81fadf",
+      "size": 18335
     },
     {
       "path": "android/apk/ChatActivity.java",
@@ -5171,9 +5171,9 @@
     }
   ],
   "archive": {
-    "commit": "78e5790b76cefd7345b38d145c4e20958a4fab62",
+    "commit": "aaf724d27d6904a29d780d2d37dcd6cc7ca0269d",
     "path": "runtime.zip",
-    "sha256": "93508b0f9563c901e5925dde3161194cdaf07f7cd2179308d29af1a6b909c651",
-    "size": 10580596
+    "sha256": "f59d3afba0205c37b122bb51a788b432618a4b904a3b99ec99f3bdb9463a91df",
+    "size": 10580606
   }
 }
