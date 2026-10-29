@@ -207,7 +207,7 @@ async function callTool(name, args){
     }
     let r;
     if (NATIVE) {
-      r = Android.http(url, null);  // 原生代发：绕开 WebView 的 mixed-content/CORS 限制
+      r = Android.http(url, null, null);  // 原生代发：绕开 WebView 的 mixed-content/CORS 限制
     } else {
       const resp = await fetch(url, {headers:H});
       r = await resp.text();
@@ -223,6 +223,7 @@ async function send(){
   if (!text || busy) return;
   if (!CFG.key){ openCfg(); sys('请先在设置中填写 API Key'); return; }
   busy = true; $('send').disabled = true; $('inp').value = '';
+  const pend = addMsg('bot', '... 思考中');
   addMsg('user', text);
   history.push({role:'user', content:text});
   await round(0);
@@ -237,15 +238,17 @@ async function round(depth){
   const tools = toolDefs();
   if (tools.length) body.tools = tools;
   let text;
-  if (NATIVE){
-    text = Android.http(CFG.url.replace(/\/+$/,'') + '/chat/completions', JSON.stringify(body), CFG.key); // 原生代发，支持本地模型
-  } else {
-    const r0 = await fetch(CFG.url.replace(/\/+$/,'') + '/chat/completions', {
+  const ep = CFG.url.replace(/\/+$/,'') + '/chat/completions';
+  try {
+    const r0 = await fetch(ep, {
       method:'POST',
-      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + CFG.key },
+      headers:{ 'Content-Type':'application/json', 'Authorization': 'Bearer ' + CFG.key },
       body: JSON.stringify(body)
     });
     text = await r0.text();
+  } catch(e) {
+    text = Android.http(ep, JSON.stringify(body), CFG.key);
+  }
   }
   let r;
   try { r = JSON.parse(text); } catch { addMsg('bot','❌ 解析失败：' + String(text).slice(0,200)); history.pop(); return; }
