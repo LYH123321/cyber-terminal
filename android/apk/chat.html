@@ -68,6 +68,8 @@ header h1{font-size:16px;font-weight:600;flex:1}
     <h1>日常聊天</h1>
     <button class="hbtn" id="btnNew">新对话</button>
     <button class="hbtn" id="btnCfg">⚙ 设置</button>
+      <button id="btnCard" class="tb" title="导入角色卡/预设 (ST JSON/PNG)">🎬</button>
+      <input type="file" id="cardFile" accept=".json,.png" style="display:none">
   </header>
   <div id="msgs"></div>
   <div id="inputbar">
@@ -297,6 +299,76 @@ $('cfgSave').onclick = () => {
   sys('设置已保存');
   if (NATIVE) Android.toast('已保存');
 };
+
+// ---------- 角色卡 / 预设导入（SillyTavern V2/V3 JSON + PNG 内嵌卡） ----------
+let CARD = null; // {name, sys, first_mes}
+function loadCardFromObj(o){
+  const d = o.data || o; // V2/V3: spec 结构在 data
+  const name = d.name || o.name || '';
+  const desc = [d.description, d.personality, d.scenario ? ('场景: '+d.scenario) : '',
+    (d.system_prompt||'')].filter(Boolean).join('\n');
+  const first = d.first_mes || o.first_mes || '';
+  CARD = { name, sys: (desc || name) + '\n\n' + (d.creator_notes||''), first };
+  P.set('cardName', name); P.set('cardSys', CARD.sys); P.set('cardFirst', first);
+  applyCard(true);
+  sys('已导入角色卡：' + (name || '(未命名)') + (NATIVE ? '' : ''));
+  if (NATIVE) Android.toast('已导入: ' + (name||'卡'));
+}
+function applyCard(isNew){
+  if (!CARD) return;
+  // 从持久化恢复
+  CARD = { name: P.get('cardName'), sys: P.get('cardSys'), first: P.get('cardFirst') };
+  if (!CARD.name && !CARD.sys) return;
+  CFG.sys = CARD.sys || DEF_SYS;
+  document.title = '赛博终端 · ' + (CARD.name || '聊天');
+  const t = document.querySelector('.title'); if (t) t.textContent = (CARD.name || '日常聊天');
+  if (isNew){
+    history = []; msgs.innerHTML = '';
+    sys('新对话 · 角色：' + CARD.name);
+    if (CARD.first){ history.push({role:'assistant', content:CARD.first}); addMsg('bot', CARD.first, CARD.name); }
+  }
+}
+function parsePngCard(buf){
+  // 扫 PNG tEXt/zTXt 块找 chara / ccv3 关键字
+  const dv = new DataView(buf);
+  if (dv.getUint32(0) !== 0x89504E47) return null;
+  let off = 8;
+  while (off < dv.byteLength - 8){
+    const len = dv.getUint32(off); const type = String.fromCharCode(dv.getUint8(off+4),dv.getUint8(off+5),dv.getUint8(off+6),dv.getUint8(off+7));
+    if (type === 'tEXt'){
+      const bytes = new Uint8Array(buf, off+8, len);
+      const nul = bytes.indexOf(0);
+      const key = new TextDecoder().decode(bytes.slice(0, nul));
+      if (key === 'chara' || key === 'ccv3'){
+        const b64 = new TextDecoder().decode(bytes.slice(nul+1));
+        try { return JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b64), ch => ch.charCodeAt(0)))); } catch(e){}
+      }
+    }
+    off += 12 + len;
+    if (type === 'IEND') break;
+  }
+  return null;
+}
+function handleCardFile(file){
+  const rd = new FileReader();
+  rd.onload = () => {
+    try {
+      if (file.name.toLowerCase().endsWith('.png') || (rd.result instanceof ArrayBuffer && new DataView(rd.result).getUint32(0) === 0x89504E47)){
+        const o = parsePngCard(rd.result);
+        if (!o){ sys('PNG 里没找到角色卡数据（chara/ccv3 块）'); return; }
+        loadCardFromObj(o);
+      } else {
+        loadCardFromObj(JSON.parse(rd.result));
+      }
+    } catch(e){ sys('导入失败：' + e.message); }
+  };
+  if (file.name.toLowerCase().endsWith('.json')) rd.readAsText(file); else rd.readAsArrayBuffer(file);
+}
+$('btnCard').onclick = () => $('cardFile').click();
+$('cardFile').onchange = function(){ if (this.files[0]) handleCardFile(this.files[0]); this.value=''; };
+// 启动时恢复已导入的卡（不重置对话）
+(function(){ if (P.get('cardName') || P.get('cardSys')) applyCard(false); })();
+
 $('btnNew').onclick = () => {
   history = []; msgs.innerHTML = '';
   sys('新对话开始。模型：' + CFG.model);
